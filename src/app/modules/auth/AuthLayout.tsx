@@ -9,12 +9,12 @@ const AuthLayout = () => {
     {
       title: "Account Type",
       text: "Select your account type",
-      pathname: "/auth/",
+      pathname: "/auth",
     },
     {
       title: "Personal Info",
       text: "Setup your personal info",
-      pathname: "/auth/registration",
+      pathname: "/auth/personal-info",
     },
     {
       title: "Verification",

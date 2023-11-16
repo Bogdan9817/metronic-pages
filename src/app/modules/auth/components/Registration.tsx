@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import clsx from "clsx";
-import { getUserByToken, register } from "../core/_requests";
-import { toAbsoluteUrl } from "../../../../_metronic/helpers";
+import { KTSVG, toAbsoluteUrl } from "../../../../_metronic/helpers";
 import { PasswordMeterComponent } from "../../../../_metronic/assets/ts/components";
 import { useAuth } from "../core/Auth";
 
@@ -17,59 +16,26 @@ const initialValues = {
   acceptTerms: false,
 };
 
-const registrationSchema = Yup.object().shape({
-  creatorname: Yup.string().required("Creator name is required"),
-  firstname: Yup.string()
-    .min(3, "Minimum 3 symbols")
-    .max(50, "Maximum 50 symbols")
-    .required("First name is required"),
-  email: Yup.string()
-    .email("Wrong email format")
-    .min(3, "Minimum 3 symbols")
-    .max(50, "Maximum 50 symbols")
-    .required("Email is required"),
-  lastname: Yup.string()
-    .min(3, "Minimum 3 symbols")
-    .max(50, "Maximum 50 symbols")
-    .required("Last name is required"),
-  password: Yup.string()
-    .min(3, "Minimum 3 symbols")
-    .max(50, "Maximum 50 symbols")
-    .required("Password is required"),
-  changepassword: Yup.string()
-    .min(3, "Minimum 3 symbols")
-    .max(50, "Maximum 50 symbols")
-    .required("Password confirmation is required")
-    .oneOf([Yup.ref("password")], "Password and Confirm Password didn't match"),
-  acceptTerms: Yup.bool().required("You must accept the terms and conditions"),
-});
+const registrationSchema = Yup.object();
 
 export function Registration() {
-  const [loading, setLoading] = useState(false);
-  const { saveAuth, setCurrentUser } = useAuth();
+  const [toggleConfirm, setToggleConfirm] = useState(true);
+  const [togglePassword, setTogglePassword] = useState(true);
+  const { setCurrentUser } = useAuth();
   const formik = useFormik({
     initialValues,
     validationSchema: registrationSchema,
-    onSubmit: async (values, { setStatus, setSubmitting }) => {
-      setLoading(true);
-      try {
-        const { data: auth } = await register(
-          values.email,
-          values.firstname,
-          values.lastname,
-          values.password,
-          values.changepassword
-        );
-        saveAuth(auth);
-        const { data: user } = await getUserByToken(auth.api_token);
-        setCurrentUser(user);
-      } catch (error) {
-        console.error(error);
-        saveAuth(undefined);
-        setStatus("The registration details is incorrect");
-        setSubmitting(false);
-        setLoading(false);
-      }
+    onSubmit: async () => {
+      const testUser = {
+        username: "test",
+        id: 0,
+        password: "test",
+        email: "test@gmail.com",
+        first_name: "Bob",
+        last_name: "Sinclar",
+      };
+
+      setCurrentUser(testUser);
     },
   });
 
@@ -216,18 +182,7 @@ export function Registration() {
           placeholder='Creator Name'
           type='text'
           autoComplete='off'
-          {...formik.getFieldProps("creatorname")}
-          className={clsx(
-            "form-control bg-transparent",
-            {
-              "is-invalid":
-                formik.touched.creatorname && formik.errors.creatorname,
-            },
-            {
-              "is-valid":
-                formik.touched.creatorname && !formik.errors.creatorname,
-            }
-          )}
+          className='form-control bg-transparent'
         />
         {formik.touched.creatorname && formik.errors.creatorname && (
           <div className='fv-plugins-message-container'>
@@ -268,22 +223,23 @@ export function Registration() {
         <div className='mb-1'>
           <div className='position-relative mb-3'>
             <input
-              type='password'
+              type={togglePassword ? "password" : "text"}
               placeholder='Password'
               autoComplete='off'
               {...formik.getFieldProps("password")}
-              className={clsx(
-                "form-control bg-transparent",
-                {
-                  "is-invalid":
-                    formik.touched.password && formik.errors.password,
-                },
-                {
-                  "is-valid":
-                    formik.touched.password && !formik.errors.password,
-                }
-              )}
+              className='form-control bg-transparent'
             />
+            <span
+              onClick={() => setTogglePassword(!togglePassword)}
+              className='position-absolute'
+              style={{ top: 10, right: 10 }}
+            >
+              {togglePassword ? (
+                <i className='bi bi-eye-slash-fill fs-2x text-muted'></i>
+              ) : (
+                <i className='bi bi-eye-fill fs-2x text-muted'></i>
+              )}
+            </span>
             {formik.touched.password && formik.errors.password && (
               <div className='fv-plugins-message-container'>
                 <div className='fv-help-block'>
@@ -292,47 +248,30 @@ export function Registration() {
               </div>
             )}
           </div>
-          {/* begin::Meter */}
-          <div
-            className='d-flex align-items-center mb-3'
-            data-kt-password-meter-control='highlight'
-          >
-            <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
-            <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
-            <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
-            <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px'></div>
-          </div>
-          {/* end::Meter */}
         </div>
       </div>
       {/* end::Form group */}
 
       {/* begin::Form group Confirm password */}
-      <div className='fv-row mb-5'>
+      <div className='fv-row position-relative mb-5'>
         <input
-          type='password'
+          type={toggleConfirm ? "password" : "text"}
           placeholder='Password confirmation'
           autoComplete='off'
           {...formik.getFieldProps("changepassword")}
-          className={clsx(
-            "form-control bg-transparent",
-            {
-              "is-invalid":
-                formik.touched.changepassword && formik.errors.changepassword,
-            },
-            {
-              "is-valid":
-                formik.touched.changepassword && !formik.errors.changepassword,
-            }
-          )}
+          className='form-control bg-transparent'
         />
-        {formik.touched.changepassword && formik.errors.changepassword && (
-          <div className='fv-plugins-message-container'>
-            <div className='fv-help-block'>
-              <span role='alert'>{formik.errors.changepassword}</span>
-            </div>
-          </div>
-        )}
+        <span
+          onClick={() => setToggleConfirm(!toggleConfirm)}
+          className='position-absolute'
+          style={{ top: 10, right: 10 }}
+        >
+          {toggleConfirm ? (
+            <i className='bi bi-eye-slash-fill fs-2x text-muted'></i>
+          ) : (
+            <i className='bi bi-eye-fill fs-2x text-muted'></i>
+          )}
+        </span>
       </div>
       {/* end::Form group */}
 
@@ -376,26 +315,16 @@ export function Registration() {
           type='submit'
           id='kt_sign_up_submit'
           className='btn btn-lg btn-primary w-100 mb-5'
-          disabled={
-            formik.isSubmitting || !formik.isValid || !formik.values.acceptTerms
-          }
         >
-          {!loading && <span className='indicator-label'>Continiue</span>}
-          {loading && (
-            <span className='indicator-progress' style={{ display: "block" }}>
-              Please wait...{" "}
-              <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
-            </span>
-          )}
+          <span className='indicator-label'>Continue</span>
         </button>
-        {!loading && (
-          <div className='text-gray-500 fw-semibold fs-6'>
-            Already have an Account?{" "}
-            <a href='#' className='ms-1 fw-semibold link-primary'>
-              Sign in
-            </a>
-          </div>
-        )}
+
+        <div className='text-gray-500 fw-semibold fs-6'>
+          Already have an Account?{" "}
+          <a href='#' className='ms-1 fw-semibold link-primary'>
+            Sign in
+          </a>
+        </div>
       </div>
       {/* end::Form group */}
     </form>
